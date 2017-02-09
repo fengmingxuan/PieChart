@@ -1,12 +1,8 @@
 package com.example.peichart;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
-
-import com.example.peichart.PieChartViewT.OnSpecialTypeClickListener;
 
 public class MainActivity extends Activity {
 
@@ -18,11 +14,12 @@ public class MainActivity extends Activity {
 
 		 PieChartView pieChartView = (PieChartView)
 		 findViewById(R.id.pie_chart);
-		 PieChartView.PieItemBean[] items = new PieChartView.PieItemBean[]{
-		 new PieChartView.PieItemBean("”È¿÷", 100),
-		 new PieChartView.PieItemBean("¬√––", 200),
-		 new PieChartView.PieItemBean("—ßœ∞", 220),
+		  PieItemBean[] items = new  PieItemBean[]{
+		 new  PieItemBean("”È¿÷", 100,Color.RED,"100",Color.RED),
+		 new  PieItemBean("¬√––", 200,Color.GREEN,"200",Color.GREEN),
+		 new  PieItemBean("—ßœ∞", 220, Color.BLUE,"200", Color.BLUE),
 		 };
+		  pieChartView.setLineColor(Color.BLACK);
 		 pieChartView.setPieItems(items);
 
 //		PieChartViewT pieChartView = (PieChartViewT) findViewById(R.id.pie_chart);

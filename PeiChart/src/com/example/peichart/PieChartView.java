@@ -1,8 +1,30 @@
+/**
+ *****************************************************************************************************************************************************************************
+ * 
+ * @author :fengguangjing
+ * @createTime:2017-2-9上午9:53:17
+ * @version:4.2.4
+ * @modifyTime:
+ * @modifyAuthor:
+ * @description:
+ *****************************************************************************************************************************************************************************
+ */
 package com.example.peichart;
+
+/**
+ *****************************************************************************************************************************************************************************
+ * 
+ * @author :fengguangjing
+ * @createTime:2017-2-9上午9:53:17
+ * @version:4.2.4
+ * @modifyTime:
+ * @modifyAuthor:
+ * @description:
+ *****************************************************************************************************************************************************************************
+ */
 
 import java.util.ArrayList;
 import java.util.List;
-
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -13,6 +35,8 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.View.MeasureSpec;
 
 public class PieChartView extends View {
     private int screenW, screenH;
@@ -33,8 +57,10 @@ public class PieChartView extends View {
     private RectF selectPieOval;
  
     private float smallMargin;
+    
+    private int lineColor;
  
-    private int[] mPieColors = new int[]{Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.MAGENTA, Color.CYAN};
+//    private int[] mPieColors = new int[]{Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.MAGENTA, Color.CYAN};
  
     private PieItemBean[] mPieItems;
     private float totalValue;
@@ -56,16 +82,31 @@ public class PieChartView extends View {
  
         init(context);
     }
- 
-    private void init(Context context) {
-        //init screen
-        screenW = ScreenUtils.getScreenW(context);
-        screenH = ScreenUtils.getScreenH(context);
+    
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int width = MeasureSpec.getSize(widthMeasureSpec);
+        int height = MeasureSpec.getSize(heightMeasureSpec);
+        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+        if (widthMode == MeasureSpec.AT_MOST
+                || heightMode == MeasureSpec.AT_MOST) {
+        }
+        setMeasuredDimension(width, height);
+
+    }
+     
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+      //init screen
+        screenW = getMeasuredWidth();
+        screenH = getMeasuredHeight();
  
         pieCenterX = screenW / 2;
-        pieCenterY = screenH / 3;
+        pieCenterY = screenH / 2;
         pieRadius = screenW / 4;
-        smallMargin = ScreenUtils.dpToPx(context, 5);
+        
  
         selectPieOval = new RectF();
         pieOval = new RectF();
@@ -73,11 +114,17 @@ public class PieChartView extends View {
         pieOval.top = pieCenterY - pieRadius;
         pieOval.right = pieCenterX + pieRadius;
         pieOval.bottom = pieCenterY + pieRadius;
+
+    }
+   
  
+    private void init(Context context) {
+        
+    	smallMargin = dpToPx(context, 5);
         //The paint to draw text.
         textPaint = new Paint();
         textPaint.setAntiAlias(true);
-        textPaint.setTextSize(ScreenUtils.dpToPx(context, 16));
+        textPaint.setTextSize(dpToPx(context, 16));
  
         //The paint to draw circle.
         piePaint = new Paint();
@@ -87,7 +134,8 @@ public class PieChartView extends View {
         //The paint to draw line to show the concrete text
         linePaint = new Paint();
         linePaint.setAntiAlias(true);
-        linePaint.setStrokeWidth(ScreenUtils.dpToPx(context, 1));
+        linePaint.setStrokeWidth(dpToPx(context, 1));
+        
  
     }
  
@@ -96,8 +144,6 @@ public class PieChartView extends View {
     //The count of the continues 'small' item.
     private int addTimes = 0;
  
-   
-
     
     @Override
     protected void onDraw(Canvas canvas) {
@@ -107,11 +153,13 @@ public class PieChartView extends View {
             float start = 0.0f;
             for (int i = 0; i < mPieItems.length; i++) {
                 //draw pie
-                piePaint.setColor(mPieColors[i % mPieColors.length]);
+//                piePaint.setColor(mPieColors[i % mPieColors.length]);
+            	piePaint.setColor(mPieItems[i].getItemColor());
                 float sweep = mPieItems[i].getItemValue() / totalValue * 360;
                 
+                System.out.println("selectPie=="+selectPie);
                 //新添加 
-                if (select >= 0 && i == select) {
+                if (selectPie >= 0 && i == selectPie) {
                 	selectPieOval = new RectF();
                 	selectPieOval.left = pieCenterX - pieRadius;
                 	selectPieOval.top = pieCenterY - pieRadius;
@@ -119,7 +167,7 @@ public class PieChartView extends View {
                 	selectPieOval.bottom = pieCenterY + pieRadius;
                      
                 	 
-                    Point point = points.get(select);
+                    Point point = points.get(selectPie);
                     int middle = (point.x + point.y) / 2;
                     if (middle <= 90) {
                         int top = (int) (Math.sin(Math.toRadians(middle)) * 15);
@@ -156,7 +204,8 @@ public class PieChartView extends View {
                         selectPieOval.top -= top;
                         selectPieOval.bottom -= top;
                     }
-                    piePaint.setColor(mPieColors[i % mPieColors.length]);
+//                    piePaint.setColor(mPieColors[i % mPieColors.length]);
+                    piePaint.setColor(mPieItems[i].getItemColor());
                     canvas.drawArc(selectPieOval, start, sweep, true,
                     		piePaint);
                 } else {
@@ -192,12 +241,15 @@ public class PieChartView extends View {
                 }
                 lineStopX = pieCenterX + pieRadius * rate * (float) (Math.cos(radians));
                 lineStopY = pieCenterY + pieRadius * rate * (float) (Math.sin(radians));
+                linePaint.setColor(lineColor);
                 canvas.drawLine(lineStartX, lineStartY, lineStopX, lineStopY, linePaint);
  
                 //write text
                 String itemTypeText = mPieItems[i].getItemType();
-                String itemPercentText = (mPieItems[i].getItemValue() /(1f*totalValue) * 100) + "%";
+//                String itemPercentText = (mPieItems[i].getItemValue() /(1f*totalValue) * 100) + "%";
+                String itemPercentText = mPieItems[i].getItemLineType();;
  
+                textPaint.setColor(mPieItems[i].getItemTextColor());
                 float itemTypeTextLen = textPaint.measureText(itemTypeText);
                 float itemPercentTextLen = textPaint.measureText(itemPercentText);
                 float lineTextWidth = Math.max(itemTypeTextLen, itemPercentTextLen);
@@ -224,6 +276,7 @@ public class PieChartView extends View {
                 } else {
                     textLineStopX -= (lineTextWidth + smallMargin * 2);
                 }
+                linePaint.setColor(lineColor);
                 canvas.drawLine(lineStopX, lineStopY, textLineStopX, lineStopY, linePaint);
  
                 lastDegree = start + sweep / 2;
@@ -269,7 +322,7 @@ public class PieChartView extends View {
                 Point point = points.get(i);
                 System.out.println("radius=="+radius+";point.x="+point.x+";point.y="+point.y+"(x+y)/2=="+((point.x+point.y)/2));
                 if (point.x <= radius && point.y >= radius) {
-                    select = i;
+                	selectPie = i;
                     System.out.println("i=="+i);
                     invalidate();
                     return true;
@@ -284,7 +337,7 @@ public class PieChartView extends View {
     
     
     private List<Point> points;
-    private int select = -1;
+    private int selectPie = -1;
  
     public PieItemBean[] getPieItems() {
         return mPieItems;
@@ -318,31 +371,43 @@ public class PieChartView extends View {
  
         return radius;
     }
- 
- 
-    static class PieItemBean {
-        private String itemType;
-        private float itemValue;
- 
-        PieItemBean(String itemType, float itemValue) {
-            this.itemType = itemType;
-            this.itemValue = itemValue;
-        }
- 
-        public String getItemType() {
-            return itemType;
-        }
- 
-        public void setItemType(String itemType) {
-            this.itemType = itemType;
-        }
- 
-        public float getItemValue() {
-            return itemValue;
-        }
- 
-        public void setItemValue(float itemValue) {
-            this.itemValue = itemValue;
-        }
-    }
-}
+   
+    
+    public void setSelectPie(int selectPie) {
+		this.selectPie = selectPie;
+		 invalidate();
+	}
+
+	public   float dpToPx(Context context, float dp) {
+		if (context == null) {
+			return -1;
+		}
+		return dp * context.getResources().getDisplayMetrics().density;
+	}
+    
+
+	public static int getScreenW(Context context) {
+		WindowManager wm = (WindowManager) context
+				.getSystemService(Context.WINDOW_SERVICE);
+
+		int width = wm.getDefaultDisplay().getWidth();
+		return width;
+	}
+
+	public static int getScreenH(Context context) {
+		WindowManager wm = (WindowManager) context
+				.getSystemService(Context.WINDOW_SERVICE);
+
+		int height = wm.getDefaultDisplay().getHeight();
+		return height;
+	}
+
+	public int getLineColor() {
+		return lineColor;
+	}
+
+	public void setLineColor(int lineColor) {
+		this.lineColor = lineColor;
+	}
+}	
+	
